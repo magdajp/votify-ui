@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import Cookies from 'js-cookie';
-import { apiGet, apiPost } from '../utils/api.ts';
+import { apiPost } from '../utils/api.ts';
 import { useNavigate } from 'react-router-dom';
-import { Role } from '../Role.tsx';
 
 export default function AuthPage() {
     const [isRegistering, setIsRegistering] = useState(false);
@@ -24,13 +23,7 @@ export default function AuthPage() {
                 password,
             });
             saveToken(loginResponse.token);
-
-            const detailsResponse = await apiGet<{ role: Role }>('/api/user/details');
-            if (detailsResponse.role === 'ADMIN') {
-                navigate('/admin-dashboard');
-            } else {
-                navigate('/resident-dashboard');
-            }
+            navigate('/redirect');
         } catch (error) {
             setError('Login failed. Please check your credentials.');
         }
@@ -53,13 +46,7 @@ export default function AuthPage() {
                 lastName
             });
             saveToken(response.token);
-
-            const detailsResponse = await apiGet<{role: Role}>('/api/user/details');
-            if (detailsResponse.role === Role.ADMIN) {
-                navigate('/admin-dashboard');
-            } else {
-                navigate('/resident-dashboard');
-            }
+            navigate('/redirect');
         } catch (error) {
             setError('Registration failed. Please check your inputs.');
         }
