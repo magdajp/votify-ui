@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import Cookies from 'js-cookie';
+import { apiGet, apiPost } from '../utils/api.ts';
+import { useNavigate } from 'react-router-dom';
+import { Role } from '../Role.tsx';
 
 export default function AuthPage() {
-    const backendUrl = import.meta.env.VITE_BACKEND_URL;
-
     const [isRegistering, setIsRegistering] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -13,24 +13,30 @@ export default function AuthPage() {
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [error, setError] = useState('');
+    const navigate = useNavigate();
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         try {
-            const response = await axios.post(`${backendUrl}/auth/login`, {
+            const loginResponse = await apiPost<{ token: string }>(`/auth/login`, {
                 email,
                 password,
             });
-            saveToken(response.data.token);
-            //TODO: Redirect to dashboard or home page
+            saveToken(loginResponse.token);
+
+            const detailsResponse = await apiGet<{ role: Role }>('/api/user/details');
+            if (detailsResponse.role === 'ADMIN') {
+                navigate('/admin-dashboard');
+            } else {
+                navigate('/resident-dashboard');
+            }
         } catch (error) {
             setError('Login failed. Please check your credentials.');
         }
     };
 
     const saveToken = (token: string) => {
-        localStorage.setItem('jwt_token', token); //TODO: to remove
         Cookies.set('jwt_token', token, { expires: 7, secure: true, sameSite: 'Strict' });
     }
 
@@ -38,7 +44,7 @@ export default function AuthPage() {
         e.preventDefault();
         setError('');
         try {
-            const response = await axios.post(`${backendUrl}/auth/register`, {
+            const response = await apiPost<{ token: string }>(`/auth/register`, {
                 email,
                 password,
                 communityName,
@@ -46,8 +52,14 @@ export default function AuthPage() {
                 firstName,
                 lastName
             });
-            saveToken(response.data.token);
-            //TODO: Redirect to dashboard or home page
+            saveToken(response.token);
+
+            const detailsResponse = await apiGet<{role: Role}>('/api/user/details');
+            if (detailsResponse.role === Role.ADMIN) {
+                navigate('/admin-dashboard');
+            } else {
+                navigate('/resident-dashboard');
+            }
         } catch (error) {
             setError('Registration failed. Please check your inputs.');
         }
