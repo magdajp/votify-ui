@@ -30,7 +30,7 @@ export default function AuthPage() {
     };
 
     const saveToken = (token: string) => {
-        Cookies.set('jwt_token', token, { expires: 7, secure: true, sameSite: 'Strict' });
+        Cookies.set('jwt_token', token, { secure: true, sameSite: 'Strict' });
     }
 
     const handleRegister = async (e: React.FormEvent) => {
