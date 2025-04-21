@@ -29,7 +29,7 @@ interface ResolutionListProps {
     communityId: string;
 }
 
-const ResolutionList: React.FC<ResolutionListProps> = ({ communityId }) => {
+const AdminResolutionList: React.FC<ResolutionListProps> = ({ communityId }) => {
     const [resolutions, setResolutions] = useState<Resolution[]>([]);
     const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
@@ -158,4 +158,4 @@ const ResolutionList: React.FC<ResolutionListProps> = ({ communityId }) => {
     );
 };
 
-export default ResolutionList;
+export default AdminResolutionList;

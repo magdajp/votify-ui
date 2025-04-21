@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import AddResolutionForm from '../components/AddResolutionForm.tsx';
-import ResolutionList from '../components/ResolutionList.tsx';
+import AdminResolutionList from '../components/AdminResolutionList.tsx';
 import { apiGet } from '../utils/api.ts';
 import AddResidentForm from '../components/AddResidentForm.tsx';
 import toast from 'react-hot-toast';
@@ -70,7 +70,7 @@ const AdminDashboard: React.FC = () => {
                 <AddResolutionForm communityId={communityId} onSuccess={onSuccessResolutionAdded} />
             )}
 
-            {activeTab === 'list' && <ResolutionList communityId={communityId} />}
+            {activeTab === 'list' && <AdminResolutionList communityId={communityId} />}
 
             {activeTab === 'resident' && (
                 <AddResidentForm communityId={communityId} onSuccess={onSuccessResidentAdded} />
