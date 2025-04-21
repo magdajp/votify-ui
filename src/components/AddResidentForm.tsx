@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { apiPost } from '../utils/api.ts';
+import { apiPut } from '../utils/api.ts';
 
 interface AddResidentFormProps {
     communityId: string;
@@ -11,77 +11,79 @@ const AddResidentForm: React.FC<AddResidentFormProps> = ({ communityId, onSucces
     const [lastName, setLastName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [message, setMessage] = useState('');
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-        setMessage('');
+        setSuccess('');
 
         try {
-            await apiPost(`/api/housing-community/${communityId}/resident`, {
+            await apiPut(`/api/housing-community/${communityId}/resident`, {
                 firstName,
                 lastName,
                 email,
-                password,
+                password
             });
 
-            setMessage('Resident added successfully.');
             setFirstName('');
             setLastName('');
             setEmail('');
             setPassword('');
+            setSuccess('Resident added successfully!');
+            onSuccess();
         } catch (err) {
-            console.error(err);
-            setError('Failed to add resident.');
+            // @ts-ignore
+            setError(`Failed to add resident: ${err.response.data.message}`);
         }
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <input
-                    type="text"
-                    placeholder="First Name"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    className="border p-2 rounded w-full"
-                    required
-                />
-                <input
-                    type="text"
-                    placeholder="Last Name"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    className="border p-2 rounded w-full"
-                    required
-                />
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-4 p-6 rounded-xl shadow-md">
+            <h2 className="text-xl font-bold text-white">Add New Resident</h2>
+
+            <input
+                type="text"
+                placeholder="First Name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                className="w-full px-4 py-2 border rounded-lg"
+                required
+            />
+            <input
+                type="text"
+                placeholder="Last Name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                className="w-full px-4 py-2 border rounded-lg"
+                required
+            />
             <input
                 type="email"
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="border p-2 rounded w-full"
+                className="w-full px-4 py-2 border rounded-lg"
                 required
             />
             <input
-                type="text"
+                type="password"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="border p-2 rounded w-full"
+                className="w-full px-4 py-2 border rounded-lg"
                 required
             />
             <button
                 type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                className="w-full bg-gray-800 text-white py-2 rounded-lg hover:bg-gray-600 transition"
             >
-                Add Resident
+                Submit
             </button>
-            {message && <p className="text-green-600">{message}</p>}
-            {error && <p className="text-red-600">{error}</p>}
+
+            {error && <div className="text-red-500 text-sm">{error}</div>}
+            {success && <div className="text-green-500 text-sm">{success}</div>}
         </form>
     );
 };
