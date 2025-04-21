@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { apiGet } from '../utils/api';
-import ResolutionList from '../components/ResolutionList';
-import AddResolutionForm from '../components/AddResolutionForm';
+import AddResolutionForm from '../components/AddResolutionForm.tsx';
+import ResolutionList from '../components/ResolutionList.tsx';
+import { apiGet } from '../utils/api.ts';
 
 type DetailsResponse = {
     email: string;
@@ -13,7 +13,7 @@ type DetailsResponse = {
 const AdminDashboard: React.FC = () => {
     const [communityId, setCommunityId] = useState('');
     const [communityName, setCommunityName] = useState('');
-    const [reloadTrigger, setReloadTrigger] = useState(false);
+    const [activeTab, setActiveTab] = useState<'add' | 'list'>('list');
 
     useEffect(() => {
         const fetchDetails = async () => {
@@ -25,26 +25,40 @@ const AdminDashboard: React.FC = () => {
                 console.error('Failed to fetch community details');
             }
         };
-
         fetchDetails();
     }, []);
 
-    const handleRefreshResolutions = () => {
-        setReloadTrigger(prev => !prev);
-    };
-
-    if (!communityId) {
-        return <div className="text-center mt-10">Loading...</div>;
-    }
-
     return (
-        <div className="p-6 space-y-6">
-            <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-            <h2 className="text-lg">Community: {communityName}</h2>
+        <div className="min-h-screen p-6">
+            <h1 className="text-2xl font-bold mb-6">Community: {communityName}</h1>
 
-            <AddResolutionForm communityId={communityId} onSuccess={handleRefreshResolutions} />
+            <div className="mb-6 flex gap-4">
+                <button
+                    className={`px-4 py-2 rounded ${
+                        activeTab === 'list' ? 'bg-gray-600 text-white' : 'bg-gray-800'
+                    }`}
+                    onClick={() => setActiveTab('list')}
+                >
+                    Resolutions
+                </button>
+                <button
+                    className={`px-4 py-2 rounded ${
+                        activeTab === 'add' ? 'bg-gray-600 text-white' : 'bg-gray-800'
+                    }`}
+                    onClick={() => setActiveTab('add')}
+                >
+                    Add Resolution
+                </button>
+            </div>
 
-            {/*<ResolutionList communityId={communityId} reloadTrigger={reloadTrigger} />*/}
+            {activeTab === 'add' && (
+                <AddResolutionForm
+                    communityId={communityId}
+                    onSuccess={() => setActiveTab('list')}
+                />
+            )}
+
+            {activeTab === 'list' && <ResolutionList communityId={communityId} />}
         </div>
     );
 };

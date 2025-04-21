@@ -78,7 +78,7 @@ const AddResolutionForm: React.FC<AddResolutionFormProps> = ({ communityId, onSu
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-xl shadow-md">
+        <form onSubmit={handleSubmit} className="space-y-4 p-6 rounded-xl shadow-md">
             <h2 className="text-xl font-bold">Add New Resolution</h2>
 
             <input
@@ -115,7 +115,7 @@ const AddResolutionForm: React.FC<AddResolutionFormProps> = ({ communityId, onSu
 
             <button
                 type="submit"
-                className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+                className="w-full bg-gray-800 text-white py-2 rounded-lg hover:bg-gray-600 transition"
             >
                 Submit
             </button>

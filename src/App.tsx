@@ -14,29 +14,31 @@ const App: React.FC = () => {
     const token = Cookies.get('jwt_token');
 
     return (
-        <Router>
-            <Routes>
-                <Route path="/" element={token ? <Navigate to="/redirect"/> : <AuthPage/>}/>
-                <Route path="/login" element={<AuthPage/>}/>
-                <Route path="/redirect" element={<RedirectAfterLogin/>}/>
-                <Route
-                    path="/admin-dashboard"
-                    element={
-                        <PrivateRoute allowedRole={Role.ADMIN}>
-                            <AdminDashboard/>
-                        </PrivateRoute>
-                    }
-                />
-                <Route
-                    path="/resident-dashboard"
-                    element={
-                        <PrivateRoute allowedRole={Role.RESIDENT}>
-                            <ResidentDashboard/>
-                        </PrivateRoute>
-                    }
-                />
-            </Routes>
-        </Router>
+        <div className="min-h-screen bg-neutral-900 text-white">
+            <Router>
+                <Routes>
+                    <Route path="/" element={token ? <Navigate to="/redirect"/> : <AuthPage/>}/>
+                    <Route path="/login" element={<AuthPage/>}/>
+                    <Route path="/redirect" element={<RedirectAfterLogin/>}/>
+                    <Route
+                        path="/admin-dashboard"
+                        element={
+                            <PrivateRoute allowedRole={Role.ADMIN}>
+                                <AdminDashboard/>
+                            </PrivateRoute>
+                        }
+                    />
+                    <Route
+                        path="/resident-dashboard"
+                        element={
+                            <PrivateRoute allowedRole={Role.RESIDENT}>
+                                <ResidentDashboard/>
+                            </PrivateRoute>
+                        }
+                    />
+                </Routes>
+            </Router>
+        </div>
     );
 };
 

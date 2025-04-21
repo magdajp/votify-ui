@@ -53,8 +53,8 @@ export default function AuthPage() {
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100">
-            <div className="w-full max-w-md p-6 bg-white rounded-2xl shadow-xl">
+        <div className="flex items-center justify-center min-h-screen">
+            <div className="w-full max-w-md p-6 rounded-2xl shadow-xl">
                 <h1 className="text-2xl font-bold text-center mb-6">
                     {isRegistering ? 'Create an Account' : 'Login'}
                 </h1>
@@ -114,7 +114,7 @@ export default function AuthPage() {
                     )}
                     <button
                         type="submit"
-                        className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+                        className="w-full bg-gray-800 text-white py-2 rounded-lg hover:bg-gray-600 transition"
                     >
                         {isRegistering ? 'Register' : 'Login'}
                     </button>
