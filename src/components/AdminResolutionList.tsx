@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { apiGet } from '../utils/api.ts';
-import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
+import { apiGet, apiPut } from '../utils/api.ts';
+import { ChevronDownIcon, ChevronUpIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import MDEditor from '@uiw/react-md-editor';
 import { Pie } from 'react-chartjs-2';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { ArcElement, Chart as ChartJS, Legend, Tooltip } from 'chart.js';
+import toast from 'react-hot-toast';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -65,6 +66,19 @@ const AdminResolutionList: React.FC<ResolutionListProps> = ({ communityId }) => 
         fetchResolutions();
     }, [communityId]);
 
+    const cancelResolution = async (resolutionId: string) => {
+        try {
+            await apiPut(`/api/housing-community/resolution/${resolutionId}`);
+            setResolutions(prev =>
+                prev.map(res => res.id === resolutionId ? { ...res, status: 'CANCELLED' } : res)
+            );
+            toast.success('Resolution has been cancelled')
+        } catch (err) {
+            toast.error('Cancelling resolution has failed')
+        }
+    };
+
+
     const toggleExpanded = (id: string) => {
         setExpanded(prev => {
             const newSet = new Set(prev);
@@ -88,32 +102,49 @@ const AdminResolutionList: React.FC<ResolutionListProps> = ({ communityId }) => 
                     <div className="space-y-3">
                         {group.map(resolution => (
                             <div key={resolution.id} className="border rounded-lg shadow-md bg-blue text-left">
-                                <div
-                                    className="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-600"
-                                    onClick={() => toggleExpanded(resolution.id)}
-                                >
-                                    <div>
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <span className={`text-xs font-medium px-2 py-1 rounded-full ${getBadgeClass(resolution.status)}`}>
-                                                {formatStatus(resolution.status)}
-                                            </span>
-                                            <h4 className="text-lg font-semibold">{resolution.title}</h4>
+                                <div className="flex justify-between items-center p-4 hover:bg-gray-600">
+                                    <div className="flex justify-between w-full items-center">
+                                        <div className="flex flex-col">
+                                            <div className="flex items-center gap-2 mb-1">
+            <span className={`text-xs font-medium px-2 py-1 rounded-full ${getBadgeClass(resolution.status)}`}>
+                {formatStatus(resolution.status)}
+            </span>
+                                                <h4 className="text-lg font-semibold">{resolution.title}</h4>
+                                            </div>
+                                            <p className="text-sm text-gray-500">
+                                                Deadline: {new Date(resolution.deadline).toLocaleString()}
+                                            </p>
                                         </div>
-                                        <p className="text-sm text-gray-500">
-                                            Deadline: {new Date(resolution.deadline).toLocaleString()}
-                                        </p>
+
+                                        <div className="flex items-center gap-4">
+                                            {resolution.status === 'UNDER_VOTING' && (
+                                                <XMarkIcon
+                                                    className="h-5 w-5 text-red-400 hover:text-red-500 cursor-pointer"
+                                                    onClick={() => cancelResolution(resolution.id)}
+                                                    title="Cancel Resolution"
+                                                />
+                                            )}
+                                            <div onClick={() => toggleExpanded(resolution.id)} className="cursor-pointer">
+                                                {expanded.has(resolution.id) ? (
+                                                    <ChevronUpIcon className="h-5 w-5 text-gray-400"/>
+                                                ) : (
+                                                    <ChevronDownIcon className="h-5 w-5 text-gray-400"/>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
+
                                     {expanded.has(resolution.id) ? (
-                                        <ChevronUpIcon className="h-5 w-5 text-gray-600" />
+                                        <ChevronUpIcon className="h-5 w-5 text-gray-600"/>
                                     ) : (
-                                        <ChevronDownIcon className="h-5 w-5 text-gray-600" />
+                                        <ChevronDownIcon className="h-5 w-5 text-gray-600"/>
                                     )}
                                 </div>
 
                                 {expanded.has(resolution.id) && (
                                     <div className="border-t p-4 space-y-4">
                                         <div data-color-mode="dark">
-                                            <MDEditor.Markdown source={resolution.content} />
+                                            <MDEditor.Markdown source={resolution.content}/>
                                         </div>
 
                                         <div className="text-sm text-gray-400">
