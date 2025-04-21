@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { apiPost } from '../utils/api.ts';
 import MDEditor from '@uiw/react-md-editor';
+import toast from 'react-hot-toast';
 
 interface AddResolutionFormProps {
     communityId: string;
@@ -56,7 +57,6 @@ const AddResolutionForm: React.FC<AddResolutionFormProps> = ({ communityId, onSu
     const [content, setContent] = useState<string | undefined>(loremIpsumContent);
     const [deadline, setDeadline] = useState('');
     const [error, setError] = useState('');
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
@@ -73,7 +73,10 @@ const AddResolutionForm: React.FC<AddResolutionFormProps> = ({ communityId, onSu
             setDeadline('');
             onSuccess();
         } catch (err) {
-            setError('Failed to add resolution. Please check your input.');
+            // @ts-ignore
+            setError(`Failed to add resolution: ${err.response.data.message}`);
+            // @ts-ignore
+            toast.error(`Failed to add resolution: ${err.response.data.message}`);
         }
     };
 

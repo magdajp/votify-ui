@@ -3,6 +3,7 @@ import AddResolutionForm from '../components/AddResolutionForm.tsx';
 import ResolutionList from '../components/ResolutionList.tsx';
 import { apiGet } from '../utils/api.ts';
 import AddResidentForm from '../components/AddResidentForm.tsx';
+import toast from 'react-hot-toast';
 
 type DetailsResponse = {
     email: string;
@@ -23,11 +24,22 @@ const AdminDashboard: React.FC = () => {
                 setCommunityId(response.communityId);
                 setCommunityName(response.communityName);
             } catch (err) {
+                toast.error(`Failed to fetch community details`);
                 console.error('Failed to fetch community details');
             }
         };
         fetchDetails();
     }, []);
+
+    const onSuccessResolutionAdded = () => {
+        setActiveTab('list');
+        toast.success(`Resolution added successfully`);
+    }
+
+    const onSuccessResidentAdded = () => {
+        setActiveTab('list');
+        toast.success(`Resident added successfully`);
+    }
 
     return (
         <div className="min-h-screen p-6">
@@ -55,13 +67,13 @@ const AdminDashboard: React.FC = () => {
             </div>
 
             {activeTab === 'add' && (
-                <AddResolutionForm communityId={communityId} onSuccess={() => setActiveTab('list')} />
+                <AddResolutionForm communityId={communityId} onSuccess={onSuccessResolutionAdded} />
             )}
 
             {activeTab === 'list' && <ResolutionList communityId={communityId} />}
 
             {activeTab === 'resident' && (
-                <AddResidentForm communityId={communityId} onSuccess={() => setActiveTab('list')} />
+                <AddResidentForm communityId={communityId} onSuccess={onSuccessResidentAdded} />
             )}
         </div>
     );

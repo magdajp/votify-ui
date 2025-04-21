@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { apiPut } from '../utils/api.ts';
+import toast from 'react-hot-toast';
 
 interface AddResidentFormProps {
     communityId: string;
@@ -36,6 +37,8 @@ const AddResidentForm: React.FC<AddResidentFormProps> = ({ communityId, onSucces
         } catch (err) {
             // @ts-ignore
             setError(`Failed to add resident: ${err.response.data.message}`);
+            // @ts-ignore
+            toast.error(`Failed to add resident: ${err.response.data.message}`);
         }
     };
 

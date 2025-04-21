@@ -9,6 +9,7 @@ import ResidentDashboard from './pages/ResidentDashboard';
 import { apiGet } from './utils/api.ts';
 import PrivateRoute from './components/PrivateRoute';
 import { Role } from './Role.tsx';
+import { Toaster } from 'react-hot-toast';
 
 const App: React.FC = () => {
     const token = Cookies.get('jwt_token');
@@ -38,6 +39,32 @@ const App: React.FC = () => {
                     />
                 </Routes>
             </Router>
+            <Toaster
+                position="top-right"
+                toastOptions={{
+                    style: {
+                        background: '#171717',
+                        color: '#ffffff',
+                        border: '1px solid #3f3f46',
+                        minWidth: '300px',
+                        maxWidth: '480px',
+                        padding: '16px 20px',
+                        fontSize: '14px',
+                    },
+                    success: {
+                        iconTheme: {
+                            primary: '#4ade80',   // green-400
+                            secondary: '#1f2937', // gray-800
+                        },
+                    },
+                    error: {
+                        iconTheme: {
+                            primary: '#f87171',   // red-400
+                            secondary: '#1f2937',
+                        },
+                    },
+                }}
+            />
         </div>
     );
 };
