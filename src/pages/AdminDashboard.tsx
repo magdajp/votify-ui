@@ -4,6 +4,7 @@ import AdminResolutionList from '../components/AdminResolutionList.tsx';
 import { apiGet } from '../utils/api.ts';
 import AddResidentForm from '../components/AddResidentForm.tsx';
 import toast from 'react-hot-toast';
+import Navbar from '../components/Navbar.tsx';
 
 type DetailsResponse = {
     email: string;
@@ -43,6 +44,7 @@ const AdminDashboard: React.FC = () => {
 
     return (
         <div className="min-h-screen p-6">
+        <Navbar />
             <h1 className="text-2xl font-bold mb-6">Community: {communityName}</h1>
 
             <div className="mb-6 flex gap-4 flex-wrap">
