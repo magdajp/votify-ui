@@ -33,6 +33,7 @@ interface ResolutionListProps {
 const AdminResolutionList: React.FC<ResolutionListProps> = ({ communityId }) => {
     const [resolutions, setResolutions] = useState<Resolution[]>([]);
     const [expanded, setExpanded] = useState<Set<string>>(new Set());
+    const [confirmingResolutionId, setConfirmingResolutionId] = useState<string | null>(null);
 
     const getBadgeClass = (status: string) => {
         switch (status) {
@@ -49,35 +50,34 @@ const AdminResolutionList: React.FC<ResolutionListProps> = ({ communityId }) => 
         }
     };
 
-    const formatStatus = (status: string) => {
-        return status.replace('_', ' ').toLowerCase().replace(/(^\w|\s\w)/g, s => s.toUpperCase());
-    };
+    const formatStatus = (status: string) =>
+        status.replace('_', ' ').toLowerCase().replace(/(^\w|\s\w)/g, s => s.toUpperCase());
 
-    useEffect(() => {
-        const fetchResolutions = async () => {
-            try {
-                const data = await apiGet<Resolution[]>(`/api/housing-community/resolution/all`);
-                setResolutions(data);
-            } catch (err) {
-                console.error('Failed to fetch resolutions');
-            }
-        };
-
-        fetchResolutions();
-    }, [communityId]);
-
-    const cancelResolution = async (resolutionId: string) => {
+    const fetchResolutions = async () => {
         try {
-            await apiPut(`/api/housing-community/resolution/${resolutionId}`);
-            setResolutions(prev =>
-                prev.map(res => res.id === resolutionId ? { ...res, status: 'CANCELLED' } : res)
-            );
-            toast.success('Resolution has been cancelled')
+            const data = await apiGet<Resolution[]>(`/api/housing-community/resolution/all`);
+            setResolutions(data);
         } catch (err) {
-            toast.error('Cancelling resolution has failed')
+            console.error('Failed to fetch resolutions');
         }
     };
 
+    useEffect(() => {
+        fetchResolutions();
+    }, [communityId]);
+
+    const onConfirmCancel = async () => {
+        if (!confirmingResolutionId) return;
+        try {
+            await apiPut(`/api/housing-community/resolution/${confirmingResolutionId}`);
+            await fetchResolutions();
+            toast.success('Resolution has been cancelled');
+        } catch (err) {
+            toast.error('Cancelling resolution has failed');
+        } finally {
+            setConfirmingResolutionId(null);
+        }
+    };
 
     const toggleExpanded = (id: string) => {
         setExpanded(prev => {
@@ -96,6 +96,7 @@ const AdminResolutionList: React.FC<ResolutionListProps> = ({ communityId }) => 
     return (
         <div className="mt-6">
             <h2 className="text-xl font-bold mb-4 text-left">Resolutions</h2>
+
             {Object.entries(groupByStatus).map(([status, group]) => (
                 <div key={status} className="mb-6">
                     <h3 className="text-lg font-semibold mb-2 text-left">{formatStatus(status)}</h3>
@@ -106,9 +107,9 @@ const AdminResolutionList: React.FC<ResolutionListProps> = ({ communityId }) => 
                                     <div className="flex justify-between w-full items-center">
                                         <div className="flex flex-col">
                                             <div className="flex items-center gap-2 mb-1">
-            <span className={`text-xs font-medium px-2 py-1 rounded-full ${getBadgeClass(resolution.status)}`}>
-                {formatStatus(resolution.status)}
-            </span>
+                                                <span className={`text-xs font-medium px-2 py-1 rounded-full ${getBadgeClass(resolution.status)}`}>
+                                                    {formatStatus(resolution.status)}
+                                                </span>
                                                 <h4 className="text-lg font-semibold">{resolution.title}</h4>
                                             </div>
                                             <p className="text-sm text-gray-500">
@@ -120,31 +121,25 @@ const AdminResolutionList: React.FC<ResolutionListProps> = ({ communityId }) => 
                                             {resolution.status === 'UNDER_VOTING' && (
                                                 <XMarkIcon
                                                     className="h-5 w-5 text-red-400 hover:text-red-500 cursor-pointer"
-                                                    onClick={() => cancelResolution(resolution.id)}
+                                                    onClick={() => setConfirmingResolutionId(resolution.id)}
                                                     title="Cancel Resolution"
                                                 />
                                             )}
                                             <div onClick={() => toggleExpanded(resolution.id)} className="cursor-pointer">
                                                 {expanded.has(resolution.id) ? (
-                                                    <ChevronUpIcon className="h-5 w-5 text-gray-400"/>
+                                                    <ChevronUpIcon className="h-5 w-5 text-gray-400" />
                                                 ) : (
-                                                    <ChevronDownIcon className="h-5 w-5 text-gray-400"/>
+                                                    <ChevronDownIcon className="h-5 w-5 text-gray-400" />
                                                 )}
                                             </div>
                                         </div>
                                     </div>
-
-                                    {expanded.has(resolution.id) ? (
-                                        <ChevronUpIcon className="h-5 w-5 text-gray-600"/>
-                                    ) : (
-                                        <ChevronDownIcon className="h-5 w-5 text-gray-600"/>
-                                    )}
                                 </div>
 
                                 {expanded.has(resolution.id) && (
                                     <div className="border-t p-4 space-y-4">
                                         <div data-color-mode="dark">
-                                            <MDEditor.Markdown source={resolution.content}/>
+                                            <MDEditor.Markdown source={resolution.content} />
                                         </div>
 
                                         <div className="text-sm text-gray-400">
@@ -168,11 +163,7 @@ const AdminResolutionList: React.FC<ResolutionListProps> = ({ communityId }) => 
                                                             resolution.voting.against,
                                                             resolution.voting.withheld
                                                         ],
-                                                        backgroundColor: [
-                                                            '#4ade80',
-                                                            '#f87171',
-                                                            '#8e8888'
-                                                        ],
+                                                        backgroundColor: ['#4ade80', '#f87171', '#8e8888'],
                                                         borderWidth: 1
                                                     }]
                                                 }}
@@ -185,6 +176,28 @@ const AdminResolutionList: React.FC<ResolutionListProps> = ({ communityId }) => 
                     </div>
                 </div>
             ))}
+
+            {confirmingResolutionId && (
+                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+                    <div className="bg-neutral-800 p-6 rounded-lg shadow-lg max-w-sm w-full">
+                        <h3 className="text-lg font-semibold mb-4 text-white">Cancel this resolution?</h3>
+                        <div className="flex justify-end gap-4">
+                            <button
+                                onClick={() => setConfirmingResolutionId(null)}
+                                className="px-4 py-2 rounded bg-gray-600 hover:bg-gray-700 text-white"
+                            >
+                                No
+                            </button>
+                            <button
+                                onClick={onConfirmCancel}
+                                className="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white"
+                            >
+                                Yes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
