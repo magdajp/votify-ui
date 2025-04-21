@@ -38,15 +38,15 @@ const AdminResolutionList: React.FC<ResolutionListProps> = ({ communityId }) => 
     const getBadgeClass = (status: string) => {
         switch (status) {
             case 'UNDER_VOTING':
-                return 'bg-yellow-100 text-yellow-800';
+                return 'bg-blue-300 text-blue-800';
             case 'ACCEPTED':
-                return 'bg-green-100 text-green-800';
+                return 'bg-green-300 text-green-800';
             case 'REJECTED':
-                return 'bg-red-100 text-red-800';
+                return 'bg-red-300 text-red-800';
             case 'CANCELLED':
-                return 'bg-gray-200 text-gray-800';
+                return 'bg-gray-300 text-gray-800';
             default:
-                return 'bg-gray-100 text-gray-800';
+                return 'bg-gray-300 text-gray-800';
         }
     };
 

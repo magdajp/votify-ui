@@ -20,20 +20,28 @@ const formatStatus = (status: string) =>
     status.replace('_', ' ').toLowerCase().replace(/(^\w|\s\w)/g, s => s.toUpperCase());
 
 const getBadgeClass = (status: string) => ({
-    UNDER_VOTING: 'bg-yellow-100 text-yellow-800',
-    ACCEPTED: 'bg-green-100 text-green-800',
-    REJECTED: 'bg-red-100 text-red-800',
+    UNDER_VOTING: 'bg-blue-300 text-blue-800',
+    ACCEPTED: 'bg-green-300 text-green-800',
+    REJECTED: 'bg-red-300 text-red-800',
     CANCELLED: 'bg-gray-300 text-gray-700',
 }[status] ?? 'bg-gray-100 text-gray-800');
 
 const getVoteLabel = (vote: VoteType) =>
-    vote ? vote.replace('_', ' ').toLowerCase().replace(/(^\w|\s\w)/g, s => s.toUpperCase()) : 'Not voted';
+    vote ? vote.replace('_', ' ').toLowerCase().replace(/(^\w|\s\w)/g, s => s.toUpperCase()) : 'Not Voted';
+
+const getVoteBadgeClass = (vote: VoteType) => ({
+    IN_FAVOR: 'bg-green-100 text-green-800',
+    AGAINST: 'bg-red-100 text-red-800',
+    WITHHELD: 'bg-yellow-100 text-yellow-800',
+    null: 'bg-gray-200 text-gray-600',
+}[vote === null ? 'null' : vote]!);
 
 const getVoteClass = (vote: VoteType) => ({
     IN_FAVOR: 'text-green-400',
     AGAINST: 'text-red-400',
     WITHHELD: 'text-yellow-400',
-}[vote!] ?? 'text-gray-400');
+    null: 'text-gray-400',
+}[vote === null ? 'null' : vote]!);
 
 const ResidentResolutionList: React.FC = () => {
     const [resolutions, setResolutions] = useState<Resolution[]>([]);
@@ -43,17 +51,23 @@ const ResidentResolutionList: React.FC = () => {
         try {
             const data = await apiGet<Resolution[]>('/api/resident/resolution/all');
 
-            const byDeadlineDesc = (a: Resolution, b: Resolution) =>
-                new Date(b.deadline).getTime() - new Date(a.deadline).getTime();
+            const statusOrder: Record<StatusType, number> = {
+                UNDER_VOTING: 0,
+                ACCEPTED: 1,
+                REJECTED: 1,
+                CANCELLED: 2,
+            };
 
-            const underVoting = data.filter(r => r.status === 'UNDER_VOTING').sort(byDeadlineDesc);
-            const ended = data.filter(r => r.status === 'ACCEPTED' || r.status === 'REJECTED').sort(byDeadlineDesc);
-            const cancelled = data.filter(r => r.status === 'CANCELLED').sort(byDeadlineDesc);
+            const sorted = [...data].sort((a, b) => {
+                const statusCompare = statusOrder[a.status] - statusOrder[b.status];
+                if (statusCompare !== 0) return statusCompare;
+                return new Date(b.deadline).getTime() - new Date(a.deadline).getTime();
+            });
 
-            setResolutions([...underVoting, ...ended, ...cancelled]);
+            setResolutions(sorted);
         } catch (err) {
             // @ts-ignore
-            toast.error(`Failed to fetch resident resolutions: ${err.response?.data?.message ?? 'Unexpected error'}`);
+            toast.error(`Failed to fetch resident resolutions: ${err.response?.data?.message || 'Unknown error'}`);
         }
     };
 
@@ -76,92 +90,76 @@ const ResidentResolutionList: React.FC = () => {
             await fetchResolutions();
         } catch (err) {
             // @ts-ignore
-            toast.error(`Failed to vote: ${err.response?.data?.message ?? 'Unexpected error'}`);
+            toast.error(`Failed to vote: ${err.response?.data?.message || 'Unknown error'}`);
         }
     };
 
-    const renderSection = (title: string, items: Resolution[]) => {
-        if (items.length === 0) return null;
+    return (
+        <div className="space-y-4">
+            {resolutions.map(res => (
+                <div key={res.id} className="border rounded-lg bg-neutral-800 shadow-md text-left">
+                    <div
+                        className="flex justify-between items-center p-4 cursor-pointer hover:bg-neutral-700"
+                        onClick={() => toggleExpanded(res.id)}
+                    >
+                        <div>
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                <span className={`text-xs font-semibold px-2 py-1 rounded-full ${getBadgeClass(res.status)}`}>
+                                    {formatStatus(res.status)}
+                                </span>
+                                <h4 className="text-lg font-semibold">{res.title}</h4>
+                            </div>
+                            <p className="text-sm text-gray-400">
+                                Deadline: {new Date(res.deadline).toLocaleString()}
+                            </p>
+                            <p className="text-sm text-gray-300 mt-1">
+                                Your vote:{' '}
+                                <span className={`text-xs font-medium px-2 py-1 rounded-full ${getVoteBadgeClass(res.vote)}`}>
+                                    {getVoteLabel(res.vote)}
+                                </span>
+                            </p>
+                        </div>
+                        {expanded.has(res.id) ? (
+                            <ChevronUpIcon className="h-5 w-5 text-gray-400" />
+                        ) : (
+                            <ChevronDownIcon className="h-5 w-5 text-gray-400" />
+                        )}
+                    </div>
 
-        return (
-            <div className="mb-6">
-                <h2 className="text-lg font-semibold mb-2">{title}</h2>
-                <div className="space-y-4">
-                    {items.map(res => (
-                        <div key={res.id} className="border rounded-lg bg-neutral-800 shadow-md text-left">
-                            <div
-                                className="flex justify-between items-center p-4 cursor-pointer hover:bg-neutral-700"
-                                onClick={() => toggleExpanded(res.id)}
-                            >
-                                <div>
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span
-                                            className={`text-xs font-semibold px-2 py-1 rounded-full ${getBadgeClass(res.status)}`}
+                    {expanded.has(res.id) && (
+                        <div className="border-t px-4 pb-4 pt-2 space-y-4">
+                            <div data-color-mode="dark">
+                                <MDEditor.Markdown source={res.content} />
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-sm text-gray-300">
+                                    Your Vote:{' '}
+                                    <span className={`font-semibold ${getVoteClass(res.vote)}`}>
+                                        {getVoteLabel(res.vote)}
+                                    </span>
+                                </span>
+
+                                {res.status === 'UNDER_VOTING' && res.vote === null && (
+                                    <div className="space-x-2">
+                                        <button
+                                            onClick={() => handleVote(res.id, res.title, 'IN_FAVOR')}
+                                            className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-white text-sm"
                                         >
-                                            {formatStatus(res.status)}
-                                        </span>
-                                        <h4 className="text-lg font-semibold">{res.title}</h4>
+                                            Vote In Favor
+                                        </button>
+                                        <button
+                                            onClick={() => handleVote(res.id, res.title, 'AGAINST')}
+                                            className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-white text-sm"
+                                        >
+                                            Vote Against
+                                        </button>
                                     </div>
-                                    <p className="text-sm text-gray-400">
-                                        Deadline: {new Date(res.deadline).toLocaleString()}
-                                    </p>
-                                </div>
-                                {expanded.has(res.id) ? (
-                                    <ChevronUpIcon className="h-5 w-5 text-gray-400" />
-                                ) : (
-                                    <ChevronDownIcon className="h-5 w-5 text-gray-400" />
                                 )}
                             </div>
-
-                            {expanded.has(res.id) && (
-                                <div className="border-t px-4 pb-4 pt-2 space-y-4">
-                                    <div data-color-mode="dark">
-                                        <MDEditor.Markdown source={res.content} />
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-sm text-gray-300">
-                                            Your Vote:{' '}
-                                            <span className={`font-semibold ${getVoteClass(res.vote)}`}>
-                                                {getVoteLabel(res.vote)}
-                                            </span>
-                                        </span>
-
-                                        {res.status === 'UNDER_VOTING' && res.vote === null && (
-                                            <div className="space-x-2">
-                                                <button
-                                                    onClick={() => handleVote(res.id, res.title, 'IN_FAVOR')}
-                                                    className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-white text-sm"
-                                                >
-                                                    Vote In Favor
-                                                </button>
-                                                <button
-                                                    onClick={() => handleVote(res.id, res.title, 'AGAINST')}
-                                                    className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-white text-sm"
-                                                >
-                                                    Vote Against
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
                         </div>
-                    ))}
+                    )}
                 </div>
-            </div>
-        );
-    };
-
-    const underVoting = resolutions.filter(r => r.status === 'UNDER_VOTING');
-    const ended = resolutions.filter(r => r.status === 'ACCEPTED' || r.status === 'REJECTED');
-    const cancelled = resolutions.filter(r => r.status === 'CANCELLED');
-
-    return (
-        <div className="p-6">
-            <h1 className="text-2xl font-bold mb-6">Your Resolutions</h1>
-            {renderSection('Under Voting', underVoting)}
-            {renderSection('Ended', ended)}
-            {renderSection('Cancelled', cancelled)}
+            ))}
         </div>
     );
 };
